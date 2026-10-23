@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TvTech Player</title>
+  <style>
+    :root {
+      --bg: #060913;
+      --card: #10172d;
+      --card-hover: #192342;
+      --primary: #2563eb;
+      --primary-glow: rgba(37, 99, 235, 0.4);
+      --accent-live: #ef4444;
+      --accent-vod: #8b5cf6;
+      --accent-series: #10b981;
+      --accent-fav: #f59e0b;
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --border: rgba(59, 130, 246, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background-image: radial-gradient(circle at 50% 0%, #111e38 0%, #060913 70%);
+    }
+
+    /* Topo Fixo */
+    header {
+      height: 65px;
+      padding: 0 20px;
+      background: rgba(10, 15, 30, 0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      font-weight: 900;
+      font-size: 1.25rem;
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 15px rgba(96, 165, 250, 0.5);
+    }
+
+    .brand span {
+      color: #fff;
+      font-weight: 400;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .header-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      background: var(--card);
+      color: #fff;
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: #3b82f6;
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    /* Contêiner de Telas */
+    main {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .view-section {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .view-section.active {
+      display: flex !important;
+    }
+
+    /* Tela 1: Início */
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(139, 92, 246, 0.15));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: inset 0 0 20px rgba(37, 99, 235, 0.1);
+    }
+
+    .hero-banner h1 {
+      font-size: 1.4rem;
+      color: #60a5fa;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .hero-banner p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      width: 100%;
+    }
+
+    @media (min-width: 600px) {
+      .home-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .nav-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .nav-card:hover, .nav-card:active {
+      background: var(--card-hover);
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .nav-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 14px 14px 0 0;
+    }
+
+    .nav-card.live::before { background: var(--accent-live); box-shadow: 0 0 10px var(--accent-live); }
+    .nav-card.vod::before { background: var(--accent-vod); box-shadow: 0 0 10px var(--accent-vod); }
+    .nav-card.series::before { background: var(--accent-series); box-shadow: 0 0 10px var(--accent-series); }
+    .nav-card.fav::before { background: var(--accent-fav); box-shadow: 0 0 10px var(--accent-fav); }
+
+    .nav-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .nav-card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .nav-card span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Tela de TV ao Vivo (Player) */
+    #view-live {
+      max-width: 100% !important;
+      height: 100%;
+      padding: 0 !important;
+    }
+
+    .live-layout {
+      display: flex;
+      height: 100%;
+      width: 100%;
+    }
+
+    .channel-column {
+      width: 40%;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      background: #0a0f1e;
+    }
+
+    .column-title {
+      padding: 14px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #060913;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+    }
+
+    .channel-list {
+      flex: 1;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    .channel-item {
+      padding: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .channel-item:hover, .channel-item.active {
+      background: var(--card-hover);
+      border-left: 4px solid var(--primary);
+    }
+
+    .player-column {
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+    }
+
+    .video-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .video-info {
+      padding: 14px;
+      background: #0a0f1e;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Grids VOD e Séries */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .media-card {
+      background: var(--card);
+      border-radius: 10px;
+      aspect-ratio: 2/3;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .media-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .media-card-title {
+      position: absolute;
+      bottom: 0;
+      inset-inline: 0;
+      padding: 25px 8px 8px;
+      background: linear-gradient(0deg, #000 0%, transparent 100%);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 650px) {
+      .live-layout {
+        flex-direction: column-reverse;
+      }
+      .channel-column {
+        width: 100%;
+        height: 55%;
+      }
+      .player-column {
+        width: 100%;
+        height: 45%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topo -->
+  <header>
+    <div class="brand">📺 TVTECH <span>PLAYER</span></div>
+    <div class="header-btns">
+      <button class="btn" onclick="switchView('home')">🏠 Início</button>
+      <button class="btn btn-primary" onclick="switchView('live')">📡 Canais</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- TELA 1: INÍCIO -->
+    <div id="view-home" class="view-section active">
+      <div class="hero-banner">
+        <h1>Servidor Conectado com Sucesso!</h1>
+        <p>Selecione uma categoria abaixo para começar a assistir.</p>
+      </div>
+
+      <div class="home-grid">
+        <div class="nav-card live" onclick="switchView('live')">
+          <div class="icon">📡</div>
+          <h2>TV AO VIVO</h2>
+          <span id="cnt-live">A carregar...</span>
+        </div>
+        <div class="nav-card vod" onclick="switchView('vod')">
+          <div class="icon">🎬</div>
+          <h2>FILMES</h2>
+          <span id="cnt-vod">A carregar...</span>
+        </div>
+        <div class="nav-card series" onclick="switchView('series')">
+          <div class="icon">🍿</div>
+          <h2>SÉRIES</h2>
+          <span id="cnt-series">A carregar...</span>
+        </div>
+        <div class="nav-card fav" onclick="alert('Selecione os canais diretamente na lista de TV ao vivo.')">
+          <div class="icon">⭐</div>
+          <h2>FAVORITOS</h2>
+          <span>Seus canais</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA 2: TV AO VIVO (PLAYER) -->
+    <div id="view-live" class="view-section">
+      <div class="live-layout">
+        <div class="channel-column">
+          <div class="column-title">Lista de Canais</div>
+          <ul class="channel-list" id="channel-container"></ul>
+        </div>
+        <div class="player-column">
+          <div class="video-container">
+            <video id="player" controls autoplay playsinline></video>
+          </div>
+          <div class="video-info">
+            <div>
+              <h4 id="current-name" style="font-size: 0.95rem;">Selecione um canal</h4>
+              <span id="current-group" style="font-size: 0.75rem; color: var(--text-muted);">TvTech Player</span>
+            </div>
+            <button class="btn" onclick="toggleFullscreen()">⛶ Tela Cheia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA 3: FILMES -->
+    <div id="view-vod" class="view-section" style="max-width: 100%;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="color: #60a5fa;">Filmes On Demand</h3>
+        <button class="btn" onclick="switchView('home')">🏠 Início</button>
+      </div>
+      <div class="grid-container" id="vod-container"></div>
+    </div>
+
+    <!-- TELA 4: SÉRIES -->
+    <div id="view-series" class="view-section" style="max-width: 100%;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="color: #60a5fa;">Séries</h3>
+        <button class="btn" onclick="switchView('home')">🏠 Início</button>
+      </div>
+      <div class="grid-container" id="series-container"></div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    // URL da sua lista ativa integrada diretamente
+    const SERVER_URL = "http://srcine.site:80/get.php?username=379757839&password=347971944&type=m3u_plus&output=mpegts";
+
+    const state = { channels: [], vod: [], series: [] };
+    let hlsInstance = null;
+    const player = document.getElementById('player');
+
+    function switchView(viewName) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('view-' + viewName);
+      if (target) target.classList.add('active');
+      if (viewName !== 'live' && player && !player.paused) player.pause();
+    }
+
+    function parseM3U(content) {
+      const lines = content.split(/\r?\n/);
+      const items = [];
+      let temp = null;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('#EXTINF:')) {
+          temp = {};
+          const comma = line.indexOf(',');
+          temp.name = comma !== -1 ? line.substring(comma + 1).trim() : 'Canal Sem Nome';
+          const group = line.match(/group-title="([^"]+)"/i);
+          temp.group = group ? group[1] : 'Geral';
+          const logo = line.match(/tvg-logo="([^"]+)"/i);
+          temp.logo = logo ? logo[1] : '';
+        } else if (line && !line.startsWith('#')) {
+          if (temp) {
+            temp.url = line;
+            items.push(temp);
+            temp = null;
+          }
+        }
+      }
+      return items;
+    }
+
+    function applyData(rawText) {
+      const items = parseM3U(rawText);
+      if (items.length === 0) {
+        alert("Erro ao ler os canais da lista.");
+        return;
+      }
+
+      state.channels = []; state.vod = []; state.series = [];
+      items.forEach(it => {
+        const g = (it.group || "").toLowerCase();
+        const n = (it.name || "").toLowerCase();
+        if (g.includes('filme') || g.includes('movie') || it.url.endsWith('.mp4') || it.url.endsWith('.mkv')) {
+          state.vod.push(it);
+        } else if (g.includes('serie') || g.includes('série') || n.match(/s\d+\s?e\d+/i)) {
+          state.series.push(it);
+        } else {
+          state.channels.push(it);
+        }
+      });
+
+      document.getElementById('cnt-live').innerText = `${state.channels.length} canais`;
+      document.getElementById('cnt-vod').innerText = `${state.vod.length} títulos`;
+      document.getElementById('cnt-series').innerText = `${state.series.length} títulos`;
+
+      renderChannels();
+      renderVod();
+      renderSeries();
+    }
+
+    function renderChannels() {
+      const box = document.getElementById('channel-container');
+      if (!box) return;
+      box.innerHTML = '';
+      state.channels.forEach((ch) => {
+        const li = document.createElement('li');
+        li.className = 'channel-item';
+        li.innerHTML = `<span>▶</span> <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${ch.name}</span>`;
+        li.onclick = () => {
+          document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+          li.classList.add('active');
+          playStream(ch);
+        };
+        box.appendChild(li);
+      });
+    }
+
+    function renderVod() {
+      const box = document.getElementById('vod-container');
+      if (!box) return;
+      box.innerHTML = '';
+      state.vod.slice(0, 100).forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        card.innerHTML = `<img src="${m.logo || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400'" /><div class="media-card-title">${m.name}</div>`;
+        card.onclick = () => { switchView('live'); playStream(m); };
+        box.appendChild(card);
+      });
+    }
+
+    function renderSeries() {
+      const box = document.getElementById('series-container');
+      if (!box) return;
+      box.innerHTML = '';
+      state.series.slice(0, 100).forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        card.innerHTML = `<img src="${s.logo || 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400'}" onerror="this.src='https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=400'" /><div class="media-card-title">${s.name}</div>`;
+        card.onclick = () => { switchView('live'); playStream(s); };
+        box.appendChild(card);
+      });
+    }
+
+    function playStream(item) {
+      document.getElementById('current-name').innerText = item.name;
+      document.getElementById('current-group').innerText = item.group || "TvTech Player";
+      if (window.Hls && Hls.isSupported() && (item.url.includes('.m3u8') || !item.url.endsWith('.mp4'))) {
+        if (hlsInstance) hlsInstance.destroy();
+        hlsInstance = new Hls({ enableWorker: true });
+        hlsInstance.loadSource(item.url);
+        hlsInstance.attachMedia(player);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => player.play().catch(() => {}));
+      } else {
+        player.src = item.url;
+        player.play().catch(() => {});
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        player.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    // Carregamento automático e direto do servidor ao abrir o app
+    window.onload = () => {
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(SERVER_URL)}`;
+      fetch(proxyUrl)
+        .then(r => r.text())
+        .then(text => applyData(text))
+        .catch(() => {
+          fetch(SERVER_URL)
+            .then(r => r.text())
+            .then(text => applyData(text))
+            .catch(err => alert("Erro ao carregar a lista do servidor: " + err));
+        });
+    };
+  </script>
+</body>
+</html>
